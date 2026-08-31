@@ -535,7 +535,8 @@ function turnTo(targetIndex, direction){
   sheen.classList.add('is-active');
 
   strips.forEach((s, i) => {
-    const order = direction === 'next' ? i : (N - 1 - i);
+    // const order = direction === 'next' ? i : (N - 1 - i);
+    const order = direction === 'next' ? (N - 1 - i) : i;
     s.inner.style.transitionDelay = `${order * STAGGER}ms`;
     void s.inner.offsetHeight;
     s.inner.style.transform = 'rotateY(-180deg)';
@@ -637,8 +638,13 @@ document.addEventListener("keydown", e=>{
     tracking = false;
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
+  
     if (Math.abs(dx) > THRESHOLD && Math.abs(dx) > Math.abs(dy)){
-      if (dx < 0) goNext(); else goPrev();
+      if (dx < 0) {
+        goNext(); // swipe LEFT → next item
+      } else {
+        goPrev(); // swipe RIGHT → previous item
+      }
     }
     startX = null; startY = null;
   });

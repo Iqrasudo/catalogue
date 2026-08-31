@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premium Bakery Products</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ==========================================================================
+   Catalogue Album — Design Tokens
+   ========================================================================== */
+:root{
+  --color-stage:      #16130F;
+  --color-stage-deep:  #0D0B08;
+  --color-ivory:        #FAF6EE;
+  --color-gold:           #C9A25C;
+  --color-line: rgba(250,246,238,0.16);
+
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Work Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Curtain-turn transition tuning */
+  --ease-curtain: cubic-bezier(.65,0,.35,1);
+  --dur-curtain: 620ms;
+}
+
+.album{
+  position: relative;
+  width: 100vw;
+  height: 100svh;
+
+  /* Lighter overlay so the marquee strips remain visible behind the album */
+  background:
+    linear-gradient(
+      rgba(13, 11, 8, 0.72),
+      rgba(13, 11, 8, 0.8)
+    );
+
+  z-index: 1;
+}
+
+*, *::before, *::after{ box-sizing: border-box; }
+html, body{ height:100%; }
+body{
+  margin:0;
+  background: var(--color-stage-deep);
+  color: var(--color-ivory);
+  font-family: var(--font-body);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+img{ max-width:100%; display:block; }
+button{ font-family: inherit; }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+:focus-visible{ outline: 2px solid var(--color-gold); outline-offset: 3px; }
+
+.album__header{
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.6rem 2rem;
+  pointer-events: none;
+}
+.album__logo{
+  height: 48px;
+  width: auto;
+  opacity: 0.95;
+  filter: drop-shadow(0 2px 10px rgba(0,0,0,0.45));
+}
+.album__counter{
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  color: var(--color-gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.album__viewer{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.75rem;
+  padding: 0 1.75rem;
+}
+
+.stage{
+  position: relative;
+  height: min(88svh, 820px);
+  width: min(62vw, 400px);
+
+  max-width: 80vw;
+  max-height: calc(112svh - 150px);
+
+  border-radius: 6px;
+  overflow: hidden;
+
+  box-shadow:
+    0 50px 120px -20px rgba(0,0,0,0.6),
+    0 0 0 1px var(--color-line);
+
+  flex-shrink: 0;
+  background: var(--color-stage);
+  touch-action: pan-y;
+}
+
+/* ==========================================================================
+   Curtain Turn — single-side 3D slat reveal
+   ========================================================================== */
+.curtain-wrap{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  perspective: 1700px;
+  perspective-origin: 50% 50%;
+}
+
+.strip{
+  position: absolute;
+  top: 0;
+  height: 100%;
+}
+
+.strip-inner{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateY(0deg);
+  transition: transform var(--dur-curtain) var(--ease-curtain);
+  will-change: transform;
+}
+
+.strip-face{
+  position: absolute;
+  inset: 0;
+  background-color: var(--color-stage);
+  background-repeat: no-repeat;
+  backface-visibility: hidden;
+}
+.strip-face--front{ transform: rotateY(0deg); z-index: 2; }
+.strip-face--back{ transform: rotateY(180deg); }
+
+/* Cinematic sweep of light that races across the stage during the turn */
+.curtain-sheen{
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 16%;
+  z-index: 6;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-160%);
+  background: linear-gradient(
+    75deg,
+    transparent 0%,
+    rgba(255,255,255,0) 30%,
+    rgba(255,255,255,0.22) 50%,
+    rgba(255,255,255,0) 70%,
+    transparent 100%
+  );
+}
+.curtain-sheen.is-active{
+  opacity: 1;
+  transform: translateX(680%);
+  transition: transform var(--dur-curtain) linear, opacity 140ms ease;
+}
+
+.img-fallback{
+  position: relative;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255,255,255,0.08), transparent 55%),
+    linear-gradient(135deg, #2A241C 0%, #1B1712 60%, #3A2E1C 130%) !important;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100%;
+}
+.img-fallback::before{
+  content: '';
+  position: absolute;
+  width: 34%;
+  aspect-ratio: 1;
+  max-width: 46px;
+  background: var(--color-ivory);
+  opacity: 0.3;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='12' width='52' height='40' rx='3' fill='none' stroke='%23000' stroke-width='4'/%3E%3Ccircle cx='22' cy='26' r='5' fill='%23000'/%3E%3Cpath d='M12 46l14-14 10 8 10-12 12 18' fill='none' stroke='%23000' stroke-width='4'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='12' width='52' height='40' rx='3' fill='none' stroke='%23000' stroke-width='4'/%3E%3Ccircle cx='22' cy='26' r='5' fill='%23000'/%3E%3Cpath d='M12 46l14-14 10 8 10-12 12 18' fill='none' stroke='%23000' stroke-width='4'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+
+.album__caption{
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 2.6rem;
+  z-index: 5;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  color: var(--color-ivory);
+  opacity: 0.9;
+  padding: 0 2rem;
+  pointer-events: none;
+  text-shadow: 0 2px 18px rgba(0,0,0,0.5);
+}
+
+.album__nav{
+  position: relative;
+  z-index: 6;
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  background: rgba(250,246,238,0.08);
+  border: 1px solid var(--color-line);
+  color: var(--color-ivory);
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+  transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+  flex-shrink: 0;
+}
+.album__nav:hover{
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+  color: var(--color-stage-deep);
+}
+.album__nav:active{ transform: scale(0.94); }
+.album__nav span{ transform: translateY(-1px); }
+
+.album__dots{
+  position: absolute;
+  left: 50%;
+  bottom: 1.1rem;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  gap: 0.5rem;
+}
+.album__dot{
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(250,246,238,0.35);
+  transition: background 0.3s ease, transform 0.3s ease;
+  cursor: pointer;
+  padding: 6px;
+  background-clip: content-box;
+  border: none;
+}
+.album__dot.is-active{
+  background: var(--color-gold);
+  transform: scale(1.25);
+  background-clip: content-box;
+}
+
+.marquee-bg{
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 6svh 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.marquee-row{
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
+}
+
+.marquee-track{
+  display: flex;
+  gap: 1rem;
+  width: max-content;
+  will-change: transform;
+}
+
+.marquee-row--left .marquee-track{
+  animation: marquee-left 48s linear infinite;
+}
+.marquee-row--right .marquee-track{
+  animation: marquee-right 48s linear infinite;
+}
+
+@keyframes marquee-left{
+  from{ transform: translateX(0); }
+  to{ transform: translateX(-50%); }
+}
+@keyframes marquee-right{
+  from{ transform: translateX(-50%); }
+  to{ transform: translateX(0); }
+}
+
+.marquee-tile{
+  flex: 0 0 auto;
+  width: 130px;
+  height: 130px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--color-stage);
+  opacity: 0.5;
+  box-shadow: 0 0 0 1px var(--color-line);
+}
+.marquee-tile img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(15%);
+}
+.marquee-tile.img-fallback::before{ max-width: 34px; }
+
+@media (max-width: 640px){
+  .marquee-tile{ width: 88px; height: 88px; }
+  .marquee-bg{ padding: 4svh 0; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .marquee-track{ animation: none !important; }
+}
+
+@media (max-width: 640px){
+  .album__header{ padding: 1.1rem 1.2rem; }
+
+  .album__viewer{
+    gap: 0.9rem;
+    padding: 0 0.9rem;
+  }
+
+  .stage{
+    height: min(86svh, 800px);
+    width: min(92vw, 560px);
+    margin: 0 auto;
+  }
+
+  .album__nav{
+    width: 40px;
+    height: 40px;
+    font-size: 1.05rem;
+  }
+
+  .album__caption{
+    bottom: 2.2rem;
+    font-size: 0.88rem;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="marquee-bg" aria-hidden="true">
+  <div class="marquee-row marquee-row--left" id="marqueeLeft"></div>
+  <div class="marquee-row marquee-row--right" id="marqueeRight"></div>
+</div>
+
+<div class="album" id="album">
+
+  <header class="album__header">
+    <img class="album__logo" src="images/PS.png" alt="Premium Bakery Products">
+    <span class="album__counter" id="counter">01 / 01</span>
+  </header>
+
+  <div class="album__viewer">
+    <button class="album__nav album__nav--prev" id="prevBtn" aria-label="Previous image">
+      <span>&#8249;</span>
+    </button>
+
+    <div class="stage" id="stage">
+      <div class="curtain-wrap" id="curtainWrap"></div>
+      <div class="curtain-sheen" id="sheen"></div>
+    </div>
+
+    <button class="album__nav album__nav--next" id="nextBtn" aria-label="Next image">
+      <span>&#8250;</span>
+    </button>
+  </div>
+
+  <p class="album__caption" id="caption"></p>
+
+  <div class="album__dots" id="dots"></div>
+
+</div>
+
+<!-- IMPORTANT: this script block MUST stay at the very end of <body>,
+     after all the elements above it — it looks them up by id as soon
+     as it runs, and they must already exist in the page. -->
+<script>
+  // Runs immediately so placeholder image paths (before real photos are added)
+  // fall back to a soft tile instead of a broken-image icon.
+  function handleImgError(img){
+    img.onerror = null;
+    img.style.display = 'none';
+    var parent = img.parentElement;
+    if(parent) parent.classList.add('img-fallback');
+  }
+
+const IMAGES = [
+  { src: "bake-11.png", caption: "Item 01" },
+  { src: "bake-12.png", caption: "Item 02" },
+  { src: "bake-13.png", caption: "Item 03" },
+  { src: "bake-14.png", caption: "Item 04" },
+  { src: "bake-15.png", caption: "Item 05" },
+  { src: "bake-16.png", caption: "Item 06" },
+  { src: "bake-17.png", caption: "Item 07" },
+  { src: "bake-18.png", caption: "Item 08" },
+  { src: "bake-19.png", caption: "Item 09" },
+  { src: "bake-20.png", caption: "Item 10" }
+];
+
+const stage = document.getElementById("stage");
+const curtainWrap = document.getElementById("curtainWrap");
+const sheen = document.getElementById("sheen");
+const counterEl = document.getElementById("counter");
+const captionEl = document.getElementById("caption");
+const dotsEl = document.getElementById("dots");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+
+const STAGGER = 42;          // ms delay between neighbouring slats
+const CURTAIN_DURATION = 620; // ms — must match --dur-curtain in CSS
+
+let currentIndex = 0;
+let animating = false;
+let strips = [];             // [{ wrap, inner, front, back }]
+let stageW = 0, stageH = 0;
+const imgStatus = {};        // src -> true/false (loaded ok / failed)
+
+/* ---------- image preload / fallback detection ---------- */
+function checkImage(src){
+  if (src in imgStatus) return Promise.resolve(imgStatus[src]);
+  return new Promise(resolve=>{
+    const test = new Image();
+    test.onload = () => { imgStatus[src] = true; resolve(true); };
+    test.onerror = () => { imgStatus[src] = false; resolve(false); };
+    test.src = src;
+  });
+}
+
+function paintFace(face, src, i, stripW){
+  face.style.backgroundImage = `url("${src}")`;
+  face.style.backgroundSize = `${stageW}px ${stageH}px`;
+  face.style.backgroundPosition = `${-i * stripW}px 0px`;
+  face.dataset.src = src;
+}
+
+async function setFaceImage(face, src, i, stripW){
+  const ok = await checkImage(src);
+  if (ok){
+    face.classList.remove('img-fallback');
+    paintFace(face, src, i, stripW);
+  } else {
+    face.classList.add('img-fallback');
+    face.style.backgroundImage = 'none';
+    face.dataset.src = src;
+  }
+}
+
+/* ---------- responsive slat count ---------- */
+function computeStripCount(){
+  const w = window.innerWidth;
+  if (w <= 480) return 6;
+  if (w <= 780) return 8;
+  return 12;
+}
+
+/* ---------- build / rebuild the curtain ---------- */
+function buildCurtain(){
+  const rect = stage.getBoundingClientRect();
+  stageW = Math.max(1, Math.round(rect.width));
+  stageH = Math.max(1, Math.round(rect.height));
+
+  const N = computeStripCount();
+  const stripW = stageW / N;
+
+  curtainWrap.innerHTML = "";
+  strips = [];
+
+  const nextIdx = (currentIndex + 1) % IMAGES.length;
+
+  for (let i = 0; i < N; i++){
+    const wrap = document.createElement("div");
+    wrap.className = "strip";
+    wrap.style.left = `${i * stripW}px`;
+    wrap.style.width = `${stripW + 0.6}px`;
+
+    const inner = document.createElement("div");
+    inner.className = "strip-inner";
+
+    const front = document.createElement("div");
+    front.className = "strip-face strip-face--front";
+
+    const back = document.createElement("div");
+    back.className = "strip-face strip-face--back";
+
+    inner.appendChild(front);
+    inner.appendChild(back);
+    wrap.appendChild(inner);
+    curtainWrap.appendChild(wrap);
+
+    setFaceImage(front, IMAGES[currentIndex].src, i, stripW);
+    setFaceImage(back, IMAGES[nextIdx].src, i, stripW);
+
+    strips.push({ wrap, inner, front, back });
+  }
+}
+
+/* ---------- the curtain turn itself ---------- */
+function turnTo(targetIndex, direction){
+  if (animating || strips.length === 0) return;
+  const N = strips.length;
+  const stripW = stageW / N;
+
+  animating = true;
+
+  // Prime the back face of every slat with the incoming image.
+  strips.forEach((s, i) => setFaceImage(s.back, IMAGES[targetIndex].src, i, stripW));
+
+  const totalSweep = CURTAIN_DURATION + (N - 1) * STAGGER;
+
+  // Light sweep across the stage, timed to match the slat wave.
+  sheen.style.transition = 'none';
+  sheen.style.opacity = '0';
+  sheen.style.transform = 'translateX(-160%)';
+  void sheen.offsetHeight;
+  sheen.style.transition = `transform ${totalSweep}ms linear, opacity 140ms ease`;
+  sheen.classList.add('is-active');
+
+  strips.forEach((s, i) => {
+    const order = direction === 'next' ? i : (N - 1 - i);
+    s.inner.style.transitionDelay = `${order * STAGGER}ms`;
+    void s.inner.offsetHeight;
+    s.inner.style.transform = 'rotateY(-180deg)';
+  });
+
+  setTimeout(() => {
+    strips.forEach((s, i) => {
+      s.inner.style.transition = 'none';
+      s.inner.style.transform = 'rotateY(0deg)';
+      paintOrFallback(s.front, s.back.dataset.src, i, stripW);
+      void s.inner.offsetHeight;
+      s.inner.style.transition = '';
+    });
+
+    sheen.classList.remove('is-active');
+    sheen.style.transition = 'none';
+    sheen.style.transform = 'translateX(-160%)';
+    sheen.style.opacity = '0';
+
+    currentIndex = targetIndex;
+    animating = false;
+    updateUI(currentIndex);
+  }, totalSweep + 40);
+}
+
+function paintOrFallback(face, src, i, stripW){
+  if (imgStatus[src] === false){
+    face.classList.add('img-fallback');
+    face.style.backgroundImage = 'none';
+  } else {
+    face.classList.remove('img-fallback');
+    paintFace(face, src, i, stripW);
+  }
+  face.dataset.src = src;
+}
+
+function goNext(){
+  if (animating) return;
+  const target = (currentIndex + 1) % IMAGES.length;
+  turnTo(target, 'next');
+}
+function goPrev(){
+  if (animating) return;
+  const target = (currentIndex - 1 + IMAGES.length) % IMAGES.length;
+  turnTo(target, 'prev');
+}
+function goTo(index){
+  if (animating || index === currentIndex) return;
+  const direction = index > currentIndex ? 'next' : 'prev';
+  turnTo(index, direction);
+}
+
+/* ---------- UI chrome ---------- */
+function updateUI(index){
+  currentIndex = ((index % IMAGES.length) + IMAGES.length) % IMAGES.length;
+  counterEl.textContent =
+    `${String(currentIndex + 1).padStart(2,"0")} / ${String(IMAGES.length).padStart(2,"0")}`;
+  captionEl.textContent = IMAGES[currentIndex].caption || "";
+
+  dotsEl.querySelectorAll(".album__dot").forEach((dot,i)=>{
+    dot.classList.toggle("is-active", i === currentIndex);
+  });
+}
+
+function renderDots(){
+  dotsEl.innerHTML = IMAGES.map((_,i)=>
+    `<button class="album__dot" data-index="${i}" aria-label="Go to image ${i+1}"></button>`
+  ).join("");
+
+  dotsEl.querySelectorAll(".album__dot").forEach(dot=>{
+    dot.addEventListener("click",()=>{
+      goTo(Number(dot.dataset.index));
+    });
+  });
+}
+
+nextBtn.addEventListener("click", goNext);
+prevBtn.addEventListener("click", goPrev);
+
+document.addEventListener("keydown", e=>{
+  if(e.key==="ArrowRight") goNext();
+  if(e.key==="ArrowLeft") goPrev();
+});
+
+/* ---------- swipe support ---------- */
+(function initSwipe(){
+  let startX = null, startY = null, tracking = false;
+  const THRESHOLD = 46;
+
+  stage.addEventListener("pointerdown", e=>{
+    if (animating) return;
+    startX = e.clientX;
+    startY = e.clientY;
+    tracking = true;
+  });
+
+  stage.addEventListener("pointerup", e=>{
+    if (!tracking || startX === null) { tracking = false; return; }
+    tracking = false;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if (Math.abs(dx) > THRESHOLD && Math.abs(dx) > Math.abs(dy)){
+      if (dx < 0) goNext(); else goPrev();
+    }
+    startX = null; startY = null;
+  });
+
+  stage.addEventListener("pointercancel", ()=>{ tracking = false; startX = null; });
+})();
+
+/* ---------- marquee background ---------- */
+function buildMarqueeRow(rowEl,images){
+  const track=document.createElement("div");
+  track.className="marquee-track";
+
+  [...images,...images].forEach(data=>{
+    const tile=document.createElement("div");
+    tile.className="marquee-tile";
+
+    const img=document.createElement("img");
+    img.src=data.src;
+    img.alt="";
+    img.loading="lazy";
+    img.onerror=()=>handleImgError(img);
+
+    tile.appendChild(img);
+    track.appendChild(tile);
+  });
+
+  rowEl.appendChild(track);
+}
+
+function initMarquee(){
+  const left=document.getElementById("marqueeLeft");
+  const right=document.getElementById("marqueeRight");
+  if(!left || !right) return;
+
+  buildMarqueeRow(left,IMAGES);
+  buildMarqueeRow(right,[...IMAGES].reverse());
+}
+
+/* ---------- init & resize ---------- */
+let resizeTimer;
+window.addEventListener("resize",()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(buildCurtain,180);
+});
+
+renderDots();
+initMarquee();
+requestAnimationFrame(buildCurtain);
+updateUI(currentIndex);
+</script>
+</body>
+</html>

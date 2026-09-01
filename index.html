@@ -76,12 +76,41 @@ button{ font-family: inherit; }
   opacity: 0.95;
   filter: drop-shadow(0 2px 10px rgba(0,0,0,0.45));
 }
+.album__header-right{
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  pointer-events: auto;
+}
 .album__counter{
   font-size: 0.75rem;
   letter-spacing: 0.16em;
   color: var(--color-gold);
   font-variant-numeric: tabular-nums;
+  margin-left: 0.4rem;
 }
+
+.icon-btn{
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(250,246,238,0.08);
+  border: 1px solid var(--color-line);
+  color: var(--color-ivory);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  transition: background 0.25s ease, border-color 0.25s ease, transform 0.2s ease, color 0.25s ease;
+  flex-shrink: 0;
+}
+.icon-btn:hover{
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+  color: var(--color-stage-deep);
+}
+.icon-btn:active{ transform: scale(0.92); }
+.icon-btn svg{ width: 18px; height: 18px; }
 
 .album__viewer{
   position: absolute;
@@ -93,16 +122,25 @@ button{ font-family: inherit; }
   padding: 0 1.75rem;
 }
 
+.stage-col{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: 100%;
+  min-width: 0;
+}
+
 .stage{
   position: relative;
 
-  width: min(400px, 62vw);
+  width: min(340px, 52vw);
   aspect-ratio: 1 / 1.55;
 
   height: auto;
 
   max-width: calc(100vw - 160px);
-  max-height: calc(100svh - 150px);
+  max-height: calc(100svh - 190px);
 
   border-radius: 6px;
   overflow: hidden;
@@ -198,27 +236,29 @@ button{ font-family: inherit; }
 }
 
 .album__caption{
-  position: absolute;
-  left: 50%;
-  top: calc(50% + 340px);
-  transform: translateX(-50%);
-
-  width: 400px;
-  max-width: 70vw;
-
   margin: 0;
-  padding: 0;
+  padding: 0 1rem;
+  max-width: 420px;
 
-  z-index: 7;
   text-align: center;
-
   font-family: var(--font-display);
   font-size: clamp(1rem, 1.6vw, 1.25rem);
   color: var(--color-ivory);
-  opacity: 0.9;
+  opacity: 0.95;
 
-  pointer-events: none;
   text-shadow: 0 2px 18px rgba(0,0,0,0.5);
+}
+
+.album__desc{
+  margin: 0;
+  padding: 0 1.2rem;
+  max-width: 420px;
+
+  text-align: center;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--color-ivory);
+  opacity: 0.65;
 }
 
 .album__nav{
@@ -268,6 +308,103 @@ button{ font-family: inherit; }
   background: var(--color-gold);
   transform: scale(1.25);
   background-clip: content-box;
+}
+
+/* ==========================================================================
+   Index overlay — grid of every item in the catalogue
+   ========================================================================== */
+.index-overlay{
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: rgba(13, 11, 8, 0.97);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 0.25s ease, transform 0.25s ease, visibility 0s linear 0.25s;
+}
+.index-overlay.is-open{
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition: opacity 0.25s ease, transform 0.25s ease, visibility 0s linear 0s;
+}
+
+.index-overlay__bar{
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.4rem 1.6rem;
+  border-bottom: 1px solid var(--color-line);
+}
+.index-overlay__bar h2{
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  color: var(--color-ivory);
+}
+
+.index-grid{
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  padding: 1.4rem 1.6rem 2.4rem;
+}
+
+.index-item{
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--color-ivory);
+  text-align: left;
+  border-radius: 8px;
+  transition: transform 0.2s ease;
+}
+.index-item:hover{ transform: translateY(-3px); }
+
+.index-item__thumb{
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1.2;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: var(--color-stage);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 0 0 1px var(--color-line);
+}
+.index-item.is-current .index-item__thumb{
+  box-shadow: 0 0 0 2px var(--color-gold);
+}
+.index-item__num{
+  position: absolute;
+  top: 8px; left: 8px;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--color-gold);
+  background: rgba(13,11,8,0.65);
+  padding: 3px 7px;
+  border-radius: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.index-item__title{
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-ivory);
+  opacity: 0.9;
+  padding: 0 0.1rem;
 }
 
 .marquee-bg{
@@ -342,6 +479,11 @@ button{ font-family: inherit; }
 
 @media (max-width: 640px){
   .album__header{ padding: 1.1rem 1.2rem; }
+  .album__logo{ height: 38px; }
+
+  .icon-btn{ width: 36px; height: 36px; }
+  .icon-btn svg{ width: 16px; height: 16px; }
+  .album__counter{ font-size: 0.68rem; margin-left: 0.2rem; }
 
   .album__viewer{
     gap: 0.9rem;
@@ -349,11 +491,11 @@ button{ font-family: inherit; }
   }
 
   .stage{
-    width: min(78vw, 360px);
+    width: min(68vw, 300px);
     height: auto;
     aspect-ratio: 1 / 1.55;
     max-width: calc(100vw - 100px);
-    max-height: calc(100svh - 130px);
+    max-height: calc(100svh - 170px);
     margin: 0 auto;
   }
 
@@ -363,11 +505,15 @@ button{ font-family: inherit; }
     font-size: 1.05rem;
   }
 
-  .album__caption{
-    bottom: 2.2rem;
-    font-size: 0.88rem;
-  }
+  .album__caption{ font-size: 0.92rem; }
+  .album__desc{ font-size: 0.76rem; }
 
+  .index-overlay__bar{ padding: 1.1rem 1.2rem; }
+  .index-grid{
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.8rem;
+    padding: 1.1rem 1.2rem 2rem;
+  }
 }
 @media (max-width: 480px){
   .album__viewer{
@@ -376,7 +522,7 @@ button{ font-family: inherit; }
   }
 
   .stage{
-    width: min(78vw, 320px);
+    width: min(68vw, 270px);
     max-width: calc(100vw - 90px);
     aspect-ratio: 1 / 1.5;
   }
@@ -385,6 +531,10 @@ button{ font-family: inherit; }
     width: 34px;
     height: 34px;
     font-size: 0.95rem;
+  }
+
+  .index-grid{
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   }
 }
 </style>
@@ -400,7 +550,25 @@ button{ font-family: inherit; }
 
   <header class="album__header">
     <img class="album__logo" src="images/PS.png" alt="Premium Bakery Products">
-    <span class="album__counter" id="counter">01 / 01</span>
+    <div class="album__header-right">
+      <button class="icon-btn" id="indexBtn" aria-label="Show all items">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+        </svg>
+      </button>
+      <button class="icon-btn" id="fsBtn" aria-label="Enter full screen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
+          <path d="M21 8V5a2 2 0 0 0-2-2h-3"></path>
+          <path d="M3 16v3a2 2 0 0 0 2 2h3"></path>
+          <path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
+        </svg>
+      </button>
+      <span class="album__counter" id="counter">01 / 01</span>
+    </div>
   </header>
 
   <div class="album__viewer">
@@ -408,21 +576,35 @@ button{ font-family: inherit; }
       <span>&#8249;</span>
     </button>
 
-    <div class="stage" id="stage">
-      <div class="curtain-wrap" id="curtainWrap"></div>
-      <div class="curtain-sheen" id="sheen"></div>
+    <div class="stage-col">
+      <div class="stage" id="stage">
+        <div class="curtain-wrap" id="curtainWrap"></div>
+        <div class="curtain-sheen" id="sheen"></div>
+      </div>
+      <p class="album__caption" id="caption"></p>
+      <p class="album__desc" id="desc"></p>
     </div>
 
     <button class="album__nav album__nav--next" id="nextBtn" aria-label="Next image">
-      
       <span>&#8250;</span>
     </button>
   </div>
 
-  <p class="album__caption" id="caption"></p>
-
   <div class="album__dots" id="dots"></div>
 
+</div>
+
+<div class="index-overlay" id="indexOverlay" aria-hidden="true">
+  <div class="index-overlay__bar">
+    <h2>All Items</h2>
+    <button class="icon-btn" id="indexCloseBtn" aria-label="Close index">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+  <div class="index-grid" id="indexGrid"></div>
 </div>
 
 <!-- IMPORTANT: this script block MUST stay at the very end of <body>,
@@ -438,17 +620,19 @@ button{ font-family: inherit; }
     if(parent) parent.classList.add('img-fallback');
   }
 
+// Title + short description for each item — edit these to match your
+// actual products; they're placeholders based on the image filenames.
 const IMAGES = [
-  { src: "bake-11.png", caption: "Item 01" },
-  { src: "bake-12.png", caption: "Item 02" },
-  { src: "bake-13.png", caption: "Item 03" },
-  { src: "bake-14.png", caption: "Item 04" },
-  { src: "bake-15.png", caption: "Item 05" },
-  { src: "bake-16.png", caption: "Item 06" },
-  { src: "bake-17.png", caption: "Item 07" },
-  { src: "bake-18.png", caption: "Item 08" },
-  { src: "bake-19.png", caption: "Item 09" },
-  { src: "bake-20.png", caption: "Item 10" }
+  { src: "bake-11.png", title: "Butter Croissant",     desc: "Flaky, all-butter layers baked fresh every morning." },
+  { src: "bake-12.png", title: "Sourdough Boule",       desc: "Naturally leavened with a 24-hour fermented crust." },
+  { src: "bake-13.png", title: "Cinnamon Swirl Loaf",   desc: "Soft crumb swirled with cinnamon sugar." },
+  { src: "bake-14.png", title: "French Baguette",       desc: "Crisp crust and an airy interior, the classic recipe." },
+  { src: "bake-15.png", title: "Chocolate Tart",        desc: "Rich dark chocolate ganache in a buttery shell." },
+  { src: "bake-16.png", title: "Almond Danish",         desc: "Delicate pastry filled with almond cream." },
+  { src: "bake-17.png", title: "Multigrain Bread",      desc: "A hearty blend of seeds and whole grains." },
+  { src: "bake-18.png", title: "Fruit Danish",          desc: "Seasonal fruit set atop a light, flaky base." },
+  { src: "bake-19.png", title: "Brioche Bun",           desc: "Soft, golden, and lightly sweet enriched dough." },
+  { src: "bake-20.png", title: "Walnut Banana Bread",   desc: "Moist banana bread studded with walnuts." }
 ];
 
 const stage = document.getElementById("stage");
@@ -456,9 +640,15 @@ const curtainWrap = document.getElementById("curtainWrap");
 const sheen = document.getElementById("sheen");
 const counterEl = document.getElementById("counter");
 const captionEl = document.getElementById("caption");
+const descEl = document.getElementById("desc");
 const dotsEl = document.getElementById("dots");
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
+const indexBtn = document.getElementById("indexBtn");
+const indexCloseBtn = document.getElementById("indexCloseBtn");
+const indexOverlay = document.getElementById("indexOverlay");
+const indexGrid = document.getElementById("indexGrid");
+const fsBtn = document.getElementById("fsBtn");
 
 const STAGGER = 42;          // ms delay between neighbouring slats
 const CURTAIN_DURATION = 620; // ms — must match --dur-curtain in CSS
@@ -570,7 +760,6 @@ function turnTo(targetIndex, direction){
   sheen.classList.add('is-active');
 
   strips.forEach((s, i) => {
-    // const order = direction === 'next' ? i : (N - 1 - i);
     const order = direction === 'next' ? (N - 1 - i) : i;
     s.inner.style.transitionDelay = `${order * STAGGER}ms`;
     void s.inner.offsetHeight;
@@ -629,10 +818,14 @@ function updateUI(index){
   currentIndex = ((index % IMAGES.length) + IMAGES.length) % IMAGES.length;
   counterEl.textContent =
     `${String(currentIndex + 1).padStart(2,"0")} / ${String(IMAGES.length).padStart(2,"0")}`;
-  captionEl.textContent = IMAGES[currentIndex].caption || "";
+  captionEl.textContent = IMAGES[currentIndex].title || "";
+  descEl.textContent = IMAGES[currentIndex].desc || "";
 
   dotsEl.querySelectorAll(".album__dot").forEach((dot,i)=>{
     dot.classList.toggle("is-active", i === currentIndex);
+  });
+  indexGrid.querySelectorAll(".index-item").forEach((item,i)=>{
+    item.classList.toggle("is-current", i === currentIndex);
   });
 }
 
@@ -652,8 +845,13 @@ nextBtn.addEventListener("click", goNext);
 prevBtn.addEventListener("click", goPrev);
 
 document.addEventListener("keydown", e=>{
+  if (indexOverlay.classList.contains('is-open')){
+    if (e.key === "Escape") closeIndex();
+    return;
+  }
   if(e.key==="ArrowRight") goNext();
   if(e.key==="ArrowLeft") goPrev();
+  if(e.key==="Escape" && isFullscreen()) exitFullscreen();
 });
 
 /* ---------- swipe support ---------- */
@@ -673,7 +871,7 @@ document.addEventListener("keydown", e=>{
     tracking = false;
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
-  
+
     if (Math.abs(dx) > THRESHOLD && Math.abs(dx) > Math.abs(dy)){
       if (dx < 0) {
         goNext(); // swipe LEFT → next item
@@ -686,6 +884,85 @@ document.addEventListener("keydown", e=>{
 
   stage.addEventListener("pointercancel", ()=>{ tracking = false; startX = null; });
 })();
+
+/* ---------- index / "view all" grid ---------- */
+function buildIndexGrid(){
+  indexGrid.innerHTML = IMAGES.map((item,i)=>`
+    <button class="index-item" data-index="${i}">
+      <span class="index-item__thumb" style="background-image:url('${item.src}')">
+        <span class="index-item__num">${String(i+1).padStart(2,'0')}</span>
+      </span>
+      <span class="index-item__title">${item.title}</span>
+    </button>
+  `).join("");
+
+  indexGrid.querySelectorAll(".index-item").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const idx = Number(btn.dataset.index);
+      closeIndex();
+      if (idx !== currentIndex) goTo(idx);
+    });
+  });
+}
+
+function openIndex(){
+  indexOverlay.classList.add("is-open");
+  indexOverlay.setAttribute("aria-hidden","false");
+}
+function closeIndex(){
+  indexOverlay.classList.remove("is-open");
+  indexOverlay.setAttribute("aria-hidden","true");
+}
+
+indexBtn.addEventListener("click", openIndex);
+indexCloseBtn.addEventListener("click", closeIndex);
+indexOverlay.addEventListener("click", e=>{
+  if (e.target === indexOverlay) closeIndex();
+});
+
+/* ---------- full screen toggle ---------- */
+function isFullscreen(){
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+function enterFullscreen(){
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen();
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+}
+function exitFullscreen(){
+  if (document.exitFullscreen) document.exitFullscreen();
+  else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+}
+function updateFsIcon(){
+  if (isFullscreen()){
+    fsBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 3v3a2 2 0 0 1-2 2H3"></path>
+      <path d="M21 8h-3a2 2 0 0 1-2-2V3"></path>
+      <path d="M3 16h3a2 2 0 0 1 2 2v3"></path>
+      <path d="M16 21v-3a2 2 0 0 1 2-2h3"></path>
+    </svg>`;
+    fsBtn.setAttribute("aria-label","Exit full screen");
+  } else {
+    fsBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
+      <path d="M21 8V5a2 2 0 0 0-2-2h-3"></path>
+      <path d="M3 16v3a2 2 0 0 0 2 2h3"></path>
+      <path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
+    </svg>`;
+    fsBtn.setAttribute("aria-label","Enter full screen");
+  }
+}
+fsBtn.addEventListener("click", ()=>{
+  if (isFullscreen()) exitFullscreen(); else enterFullscreen();
+});
+document.addEventListener("fullscreenchange", ()=>{
+  updateFsIcon();
+  setTimeout(buildCurtain, 150);
+});
+document.addEventListener("webkitfullscreenchange", ()=>{
+  updateFsIcon();
+  setTimeout(buildCurtain, 150);
+});
 
 /* ---------- marquee background ---------- */
 function buildMarqueeRow(rowEl,images){
@@ -724,9 +1001,15 @@ window.addEventListener("resize",()=>{
   clearTimeout(resizeTimer);
   resizeTimer=setTimeout(buildCurtain,180);
 });
+window.addEventListener("orientationchange",()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(buildCurtain,220);
+});
 
 renderDots();
+buildIndexGrid();
 initMarquee();
+updateFsIcon();
 requestAnimationFrame(buildCurtain);
 updateUI(currentIndex);
 </script>
